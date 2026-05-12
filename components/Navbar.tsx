@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { CurrencySwitcher } from "@/components/CurrencySwitcher";
 import { NavbarAuth } from "@/components/NavbarAuth";
@@ -23,9 +24,19 @@ export async function Navbar() {
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6">
         <Link
           href="/"
-          className="text-lg font-semibold tracking-tight text-foreground sm:text-[1.05rem]"
+          className="flex items-center gap-2.5 text-lg font-semibold tracking-tight text-foreground sm:text-[1.05rem]"
         >
-          Re<span className="text-primary">Listed</span>
+          <Image
+            src="/relisted-mark.png"
+            alt=""
+            width={36}
+            height={36}
+            className="size-8 shrink-0 sm:size-9"
+            priority
+          />
+          <span>
+            Re<span className="text-primary">Listed</span>
+          </span>
         </Link>
         <nav className="hidden flex-1 items-center justify-center gap-7 text-sm font-medium text-muted sm:flex">
           {links.map((l) => (
