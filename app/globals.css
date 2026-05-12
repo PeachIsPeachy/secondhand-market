@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+/*
+  ReListed — professional black + blue system
+  Logo: near-black “Re” + brand blue “Listed”
+*/
+:root {
+  --foreground: #0c0c0e;
+  --muted: #5c6370;
+  --background: #f1f2f5;
+  --surface: #ffffff;
+  --border: #e1e4ea;
+  --primary: #0b63c9;
+  --primary-hover: #084a9a;
+  --primary-subtle: #e8f1fc;
+  --primary-ring: rgba(11, 99, 201, 0.22);
+}
+
+@theme inline {
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-subtle: var(--primary-subtle);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-feature-settings: "kern" 1, "liga" 1;
+}
+
+::selection {
+  background-color: color-mix(in srgb, var(--primary) 24%, transparent);
+}
