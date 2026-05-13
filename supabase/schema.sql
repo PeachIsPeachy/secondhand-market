@@ -52,6 +52,7 @@ create table public.products (
   price numeric(12, 2) not null check (price >= 0),
   category text not null,
   condition text not null check (condition in ('new', 'like_new', 'used', 'damaged')),
+  location text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

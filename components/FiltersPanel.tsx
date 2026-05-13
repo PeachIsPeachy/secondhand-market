@@ -139,10 +139,7 @@ export function FiltersPanel({ basePath = "/" }: { basePath?: string }) {
             placeholder="Any"
           />
         </label>
-        <p className="text-[11px] leading-snug text-muted sm:col-span-2">
-          Price filters use USD (stored currency). Card prices reflect your display currency in
-          the header.
-        </p>
+       
       </div>
 
       <label className="block text-xs font-medium text-muted">

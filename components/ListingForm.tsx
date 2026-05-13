@@ -1,8 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CATEGORIES, CONDITIONS } from "@/lib/constants";
+import { CambodiaLocationSelect } from "@/components/CambodiaLocationSelect";
+import {
+  formatKhLocation,
+  parseKhLocation,
+} from "@/lib/data/cambodia-locations";
 import { createClient } from "@/lib/supabase/client";
 
 const BUCKET = "product-images";
@@ -14,6 +19,8 @@ type Mode = "create" | "edit";
 type Props = {
   mode: Mode;
   productId?: string;
+  /** Used when creating a listing to pre-fill meet-up area from the seller profile */
+  profileDefaultLocation?: string | null;
   initial?: {
     title: string;
     description: string;
@@ -21,10 +28,26 @@ type Props = {
     category: string;
     condition: string;
     images: { id: string; storage_path: string; sort_order: number }[];
+    location?: string | null;
   };
 };
 
-export function ListingForm({ mode, productId, initial }: Props) {
+function listingLocationFields(
+  listingStored: string | null | undefined,
+  profileStored: string | null | undefined
+) {
+  const fromListing = parseKhLocation(listingStored ?? "");
+  if (fromListing) return fromListing;
+  const fromProfile = parseKhLocation(profileStored ?? "");
+  return fromProfile ?? { province: "", city: "" };
+}
+
+export function ListingForm({
+  mode,
+  productId,
+  profileDefaultLocation,
+  initial,
+}: Props) {
   const router = useRouter();
   const [title, setTitle] = useState(initial?.title ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
@@ -33,10 +56,19 @@ export function ListingForm({ mode, productId, initial }: Props) {
   const [condition, setCondition] = useState(initial?.condition ?? "used");
   const [files, setFiles] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState(initial?.images ?? []);
+  const locSeed = listingLocationFields(initial?.location, profileDefaultLocation);
+  const [locProvince, setLocProvince] = useState(locSeed.province);
+  const [locCity, setLocCity] = useState(locSeed.city);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const remainingSlots = Math.max(0, MAX_FILES - existingImages.length);
+
+  useEffect(() => {
+    const next = listingLocationFields(initial?.location, profileDefaultLocation);
+    setLocProvince(next.province);
+    setLocCity(next.city);
+  }, [initial?.location, profileDefaultLocation]);
 
   async function removeExisting(path: string, id: string) {
     const supabase = createClient();
@@ -76,6 +108,8 @@ export function ListingForm({ mode, productId, initial }: Props) {
         return;
       }
 
+      const meetupLocation = formatKhLocation(locProvince, locCity);
+
       let pid = productId;
 
       if (mode === "create") {
@@ -88,6 +122,7 @@ export function ListingForm({ mode, productId, initial }: Props) {
             price: priceNum,
             category,
             condition,
+            location: meetupLocation,
           })
           .select("id")
           .single();
@@ -107,6 +142,7 @@ export function ListingForm({ mode, productId, initial }: Props) {
             price: priceNum,
             category,
             condition,
+            location: meetupLocation,
           })
           .eq("id", productId)
           .eq("seller_id", user.id);
@@ -213,6 +249,25 @@ export function ListingForm({ mode, productId, initial }: Props) {
           Amounts are saved in US dollars. Buyers can view other currencies using the site
           header.
         </p>
+      </div>
+
+      <div>
+        <label className="block text-xs font-medium text-muted">
+          Meet-up location <span className="font-normal opacity-80">(optional)</span>
+        </label>
+        <p className="mt-1 text-[11px] text-muted">
+          Where buyers can pick up the item—defaults from your profile when you create a new listing.
+        </p>
+        <div className="mt-3">
+          <CambodiaLocationSelect
+            province={locProvince}
+            city={locCity}
+            onProvinceChange={setLocProvince}
+            onCityChange={setLocCity}
+            provinceId="listing-kh-province"
+            cityId="listing-kh-city"
+          />
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">

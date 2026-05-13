@@ -1,7 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { CurrencySwitcher } from "@/components/CurrencySwitcher";
+import { MessagesNavItem } from "@/components/MessagesNavItem";
 import { NavbarAuth } from "@/components/NavbarAuth";
+import { fetchUnreadInboundTotal } from "@/lib/data/messages";
 import { getDisplayCurrency } from "@/lib/display-currency";
 import { createClient } from "@/lib/supabase/server";
 
@@ -18,6 +20,9 @@ export async function Navbar() {
     getDisplayCurrency(),
   ]);
   const user = supabase ? (await supabase.auth.getUser()).data.user : null;
+  const unreadCount = user ? await fetchUnreadInboundTotal(user.id) : 0;
+
+  const navMuted = "transition-colors hover:text-primary";
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-surface/92 shadow-[0_1px_0_rgba(12,12,14,0.06)] backdrop-blur-md">
@@ -40,23 +45,17 @@ export async function Navbar() {
         </Link>
         <nav className="hidden flex-1 items-center justify-center gap-7 text-sm font-medium text-muted sm:flex">
           {links.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className="transition-colors hover:text-primary"
-            >
+            <Link key={l.href} href={l.href} className={navMuted}>
               {l.label}
             </Link>
           ))}
           {user && (
-            <Link href="/messages" className="transition-colors hover:text-primary">
-              Messages
-            </Link>
-          )}
-          {user && (
-            <Link href="/search" className="transition-colors hover:text-primary">
-              Search
-            </Link>
+            <>
+              <MessagesNavItem initialCount={unreadCount} className={navMuted} />
+              <Link href="/search" className={navMuted}>
+                Search
+              </Link>
+            </>
           )}
         </nav>
         <div className="flex items-center gap-2 sm:gap-3">
@@ -71,14 +70,12 @@ export async function Navbar() {
           </Link>
         ))}
         {user && (
-          <Link href="/messages" className="hover:text-primary">
-            Messages
-          </Link>
-        )}
-        {user && (
-          <Link href="/search" className="hover:text-primary">
-            Search
-          </Link>
+          <>
+            <MessagesNavItem initialCount={unreadCount} className="hover:text-primary" />
+            <Link href="/search" className="hover:text-primary">
+              Search
+            </Link>
+          </>
         )}
       </nav>
     </header>

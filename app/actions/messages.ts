@@ -1,8 +1,36 @@
 "use server";
 
+import { sendNewMessageEmailNotice } from "@/lib/email/notify-message-email";
 import { createClient } from "@/lib/supabase/server";
 
 export type SendThreadReplyResult = { ok: true } | { ok: false; error: string };
+
+export async function markConversationSeen(
+  productId: string,
+  peerId: string
+): Promise<void> {
+  const supabase = await createClient();
+  if (!supabase) {
+    return;
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || peerId === user.id || !productId) {
+    return;
+  }
+
+  await supabase.from("conversation_seen").upsert(
+    {
+      viewer_id: user.id,
+      product_id: productId,
+      peer_id: peerId,
+      last_seen_at: new Date().toISOString(),
+    },
+    { onConflict: "viewer_id,product_id,peer_id" }
+  );
+}
 
 export async function sendThreadReply(formData: FormData): Promise<SendThreadReplyResult> {
   const productId = String(formData.get("productId") ?? "").trim();
@@ -54,6 +82,24 @@ export async function sendThreadReply(formData: FormData): Promise<SendThreadRep
   if (insertErr) {
     return { ok: false, error: insertErr.message };
   }
+
+  const [{ data: profileRow }, { data: productRow }] = await Promise.all([
+    supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
+    supabase.from("products").select("title").eq("id", productId).maybeSingle(),
+  ]);
+
+  const senderDisplayName =
+    profileRow?.full_name?.trim() || user.email?.split("@")[0] || "Someone";
+  const productTitle =
+    (productRow as { title?: string } | null)?.title?.trim() || "your listing";
+
+  void sendNewMessageEmailNotice({
+    recipientUserId: peerId,
+    senderDisplayName,
+    productTitle,
+    previewSnippet: body,
+    threadPath: `/messages/${productId}/${user.id}`,
+  });
 
   return { ok: true };
 }

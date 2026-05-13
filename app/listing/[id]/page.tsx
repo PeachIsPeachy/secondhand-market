@@ -8,7 +8,10 @@ import { getListingPriceFormatter } from "@/lib/display-currency";
 import { createClient } from "@/lib/supabase/server";
 import { categoryLabel, conditionLabel, formatPrice } from "@/lib/format";
 import { getProductImagePublicUrl } from "@/lib/supabase/public-url";
+import { ProfileAvatar } from "@/components/ProfileAvatar";
 import { SetupBanner } from "@/components/SetupBanner";
+import { displayKhLocation } from "@/lib/data/cambodia-locations";
+import { listingLocationLine } from "@/lib/display/listing-location";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -67,6 +70,7 @@ export default async function ListingPage({ params }: Props) {
     images.length === 1
       ? "(max-width: 1024px) 100vw, 720px"
       : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 380px";
+  const listingLocLine = listingLocationLine(product);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-10">
@@ -100,6 +104,7 @@ export default async function ListingPage({ params }: Props) {
             )}
             <p className="mt-2 text-sm text-muted">
               {conditionLabel(String(product.condition))}
+              {listingLocLine ? <> · {listingLocLine}</> : null}
             </p>
           </div>
 
@@ -107,12 +112,28 @@ export default async function ListingPage({ params }: Props) {
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
               Seller
             </p>
-            <p className="mt-1 font-medium text-foreground">
-              {seller?.full_name?.trim() || "Private seller"}
-            </p>
-            {seller?.location && (
-              <p className="text-sm text-muted">{seller.location}</p>
-            )}
+            <Link
+              href={`/seller/${product.seller_id}`}
+              className="group mt-3 flex items-start gap-3 rounded-xl p-1 outline-none transition hover:bg-primary-subtle/60 focus-visible:ring-2 focus-visible:ring-primary/25"
+            >
+              <ProfileAvatar
+                src={seller?.avatar_url}
+                alt=""
+                sizes="48px"
+                className="size-12 bg-background ring-1 ring-border"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-foreground group-hover:text-primary group-hover:underline">
+                  {seller?.full_name?.trim() || "Private seller"}
+                </p>
+                {seller?.location ? (
+                  <p className="text-sm text-muted">
+                    {displayKhLocation(seller.location)}
+                  </p>
+                ) : null}
+                <p className="mt-2 text-xs font-semibold text-primary">View seller profile →</p>
+              </div>
+            </Link>
           </div>
 
           <div>

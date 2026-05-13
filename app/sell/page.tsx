@@ -27,6 +27,12 @@ export default async function SellPage() {
     redirect("/login?next=/sell");
   }
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("location")
+    .eq("id", user.id)
+    .maybeSingle();
+
   return (
     <div className="mx-auto max-w-xl px-4 py-10 sm:px-6">
       <h1 className="text-2xl font-bold tracking-tight text-foreground">Sell an item</h1>
@@ -34,7 +40,7 @@ export default async function SellPage() {
         Add photos, set a fair price, and publish to the marketplace.
       </p>
       <div className="mt-8">
-        <ListingForm mode="create" />
+        <ListingForm mode="create" profileDefaultLocation={profile?.location ?? null} />
       </div>
     </div>
   );

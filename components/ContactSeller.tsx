@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { sendContactSellerMessage } from "@/app/actions/contact-seller";
 
 type Props = {
   productId: string;
@@ -23,29 +23,12 @@ export function ContactSeller({ productId, sellerId, currentUserId }: Props) {
     setStatus("saving");
     setError(null);
     try {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        setError("You need to be signed in.");
+      const result = await sendContactSellerMessage(productId, sellerId, body);
+      if (!result.ok) {
+        setError(result.error);
         setStatus("error");
         return;
       }
-
-      const { error: insertError } = await supabase.from("messages").insert({
-        product_id: productId,
-        sender_id: user.id,
-        recipient_id: sellerId,
-        body: body.trim(),
-      });
-
-      if (insertError) {
-        setError(insertError.message);
-        setStatus("error");
-        return;
-      }
-
       setStatus("done");
       setBody("");
     } catch {
@@ -91,7 +74,9 @@ export function ContactSeller({ productId, sellerId, currentUserId }: Props) {
           <div className="relative z-10 w-full max-w-md rounded-2xl border border-border bg-surface p-5 shadow-2xl shadow-foreground/10">
             <h3 className="text-lg font-semibold text-foreground">Message the seller</h3>
             <p className="mt-1 text-sm text-muted">
-              They will see this in their ReListed inbox. No email is sent in this MVP.
+              They&apos;ll see this in their ReListed inbox. When email is configured (see{" "}
+              <code className="rounded bg-border/60 px-1 py-0.5 text-[11px]">.env.example</code>), they
+              can also get an alert in their personal email.
             </p>
             <textarea
               value={body}

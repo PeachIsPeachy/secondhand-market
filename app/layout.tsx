@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { MessagesAmbientNotifier } from "@/components/MessagesAmbientNotifier";
 import { Navbar } from "@/components/Navbar";
 import "./globals.css";
 
@@ -31,6 +32,7 @@ export default function RootLayout({
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full`}>
       <body className="flex min-h-full flex-col bg-background font-sans text-foreground antialiased">
         <Navbar />
+        <MessagesAmbientNotifier />
         <main className="flex-1">{children}</main>
         <footer className="border-t border-border bg-surface">
           <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">

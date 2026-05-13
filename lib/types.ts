@@ -9,6 +9,9 @@ export type ProductImage = {
 export type ProfilePreview = {
   full_name: string | null;
   location: string | null;
+  avatar_url?: string | null;
+  telegram?: string | null;
+  phone?: string | null;
 };
 
 export type ProductWithRelations = {
@@ -19,6 +22,8 @@ export type ProductWithRelations = {
   price: number;
   category: CategoryValue | string;
   condition: ConditionValue | string;
+  /** Meet-up / pickup area; UI falls back to seller profile location when empty */
+  location?: string | null;
   created_at: string;
   updated_at: string;
   product_images?: ProductImage[] | null;
@@ -32,7 +37,10 @@ export type MessageWithProduct = {
   product_id: string | null;
   sender_id: string;
   recipient_id: string;
-  products: { title: string } | null;
+  products: {
+    title: string;
+    product_images?: { storage_path: string; sort_order: number }[] | null;
+  } | null;
   sender: ProfilePreview | null;
 };
 
@@ -49,4 +57,10 @@ export type ConversationSummary = {
   peerLabel: string;
   lastBody: string;
   lastAt: string;
+  /** First listing image for inbox thumbnails */
+  productThumbUrl: string | null;
+  /** Messages from peer not yet “seen” in inbox */
+  unreadCount: number;
+  /** Peer profile photo if set */
+  peerAvatarUrl: string | null;
 };

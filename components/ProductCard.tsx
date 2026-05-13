@@ -3,6 +3,7 @@ import Link from "next/link";
 import { formatPrice, conditionLabel, categoryLabel } from "@/lib/format";
 import type { ProductWithRelations } from "@/lib/types";
 import { getProductImagePublicUrl } from "@/lib/supabase/public-url";
+import { listingLocationLine } from "@/lib/display/listing-location";
 
 export function ProductCard({
   product,
@@ -13,6 +14,7 @@ export function ProductCard({
 }) {
   const img = product.product_images?.[0];
   const src = img ? getProductImagePublicUrl(img.storage_path) : null;
+  const meetLine = listingLocationLine(product);
 
   return (
     <Link
@@ -46,6 +48,9 @@ export function ProductCard({
           {priceLabel ?? formatPrice(Number(product.price))}
         </p>
         <p className="text-xs text-muted">{conditionLabel(String(product.condition))}</p>
+        {meetLine ? (
+          <p className="text-xs font-medium text-foreground/80">{meetLine}</p>
+        ) : null}
       </div>
     </Link>
   );

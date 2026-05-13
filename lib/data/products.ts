@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import { humanizeSupabaseSchemaError } from "@/lib/supabase/schema-errors";
 import type { SortValue } from "@/lib/constants";
 import type { ProductWithRelations } from "@/lib/types";
 
@@ -46,10 +47,11 @@ export async function fetchProducts(
       price,
       category,
       condition,
+      location,
       created_at,
       updated_at,
       product_images ( id, storage_path, sort_order ),
-      profiles!seller_id ( full_name, location )
+      profiles!seller_id ( full_name, location, avatar_url )
     `
     )
     .order(column, { ascending });
@@ -79,7 +81,7 @@ export async function fetchProducts(
   const { data, error } = await query;
 
   if (error) {
-    return { products: [], error: error.message };
+    return { products: [], error: humanizeSupabaseSchemaError(error.message) };
   }
 
   const rows = (data ?? []) as unknown as ProductWithRelations[];
@@ -113,17 +115,18 @@ export async function fetchProductById(
       price,
       category,
       condition,
+      location,
       created_at,
       updated_at,
       product_images ( id, storage_path, sort_order ),
-      profiles!seller_id ( full_name, location )
+      profiles!seller_id ( full_name, location, avatar_url )
     `
     )
     .eq("id", id)
     .maybeSingle();
 
   if (error) {
-    return { product: null, error: error.message };
+    return { product: null, error: humanizeSupabaseSchemaError(error.message) };
   }
 
   const product = data as unknown as ProductWithRelations | null;
@@ -153,17 +156,62 @@ export async function fetchMyProducts(
       price,
       category,
       condition,
+      location,
       created_at,
       updated_at,
       product_images ( id, storage_path, sort_order ),
-      profiles!seller_id ( full_name, location )
+      profiles!seller_id ( full_name, location, avatar_url )
     `
     )
     .eq("seller_id", userId)
     .order("created_at", { ascending: false });
 
   if (error) {
-    return { products: [], error: error.message };
+    return { products: [], error: humanizeSupabaseSchemaError(error.message) };
+  }
+
+  const rows = (data ?? []) as unknown as ProductWithRelations[];
+  rows.forEach((p) => {
+    if (p.product_images?.length) {
+      p.product_images.sort((a, b) => a.sort_order - b.sort_order);
+    }
+  });
+
+  return { products: rows, error: null };
+}
+
+/** Active listings for a public seller profile page */
+export async function fetchProductsForSeller(
+  sellerId: string
+): Promise<{ products: ProductWithRelations[]; error: string | null }> {
+  const supabase = await createClient();
+  if (!supabase) {
+    return { products: [], error: "missing_env" };
+  }
+
+  const { data, error } = await supabase
+    .from("products")
+    .select(
+      `
+      id,
+      seller_id,
+      title,
+      description,
+      price,
+      category,
+      condition,
+      location,
+      created_at,
+      updated_at,
+      product_images ( id, storage_path, sort_order ),
+      profiles!seller_id ( full_name, location, avatar_url )
+    `
+    )
+    .eq("seller_id", sellerId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    return { products: [], error: humanizeSupabaseSchemaError(error.message) };
   }
 
   const rows = (data ?? []) as unknown as ProductWithRelations[];

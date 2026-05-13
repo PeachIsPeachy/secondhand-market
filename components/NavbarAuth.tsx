@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 type Props = {
@@ -9,13 +8,28 @@ type Props = {
 };
 
 export function NavbarAuth({ user }: Props) {
-  const router = useRouter();
-
   async function signOut() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.refresh();
-    router.push("/");
+    try {
+      const res = await fetch("/auth/sign-out", {
+        method: "POST",
+        credentials: "same-origin",
+        redirect: "manual",
+      });
+      if (
+        !(
+          res.ok ||
+          res.status === 302 ||
+          res.status === 303 ||
+          res.status === 307
+        )
+      ) {
+        throw new Error(`sign-out failed (${res.status})`);
+      }
+    } catch {
+      const supabase = createClient();
+      await supabase.auth.signOut({ scope: "global" });
+    }
+    window.location.assign("/");
   }
 
   if (!user) {

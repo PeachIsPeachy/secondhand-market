@@ -56,6 +56,7 @@ export default async function EditListingPage({ params }: Props) {
         <ListingForm
           mode="edit"
           productId={product.id}
+          profileDefaultLocation={null}
           initial={{
             title: product.title,
             description: product.description,
@@ -63,6 +64,7 @@ export default async function EditListingPage({ params }: Props) {
             category: String(product.category),
             condition: String(product.condition),
             images: product.product_images ?? [],
+            location: product.location ?? null,
           }}
         />
       </div>

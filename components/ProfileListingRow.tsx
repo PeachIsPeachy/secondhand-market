@@ -3,6 +3,7 @@ import Link from "next/link";
 import { formatPrice } from "@/lib/format";
 import type { ProductWithRelations } from "@/lib/types";
 import { getProductImagePublicUrl } from "@/lib/supabase/public-url";
+import { listingLocationLine } from "@/lib/display/listing-location";
 import { DeleteListingButton } from "@/components/DeleteListingButton";
 
 export function ProfileListingRow({
@@ -14,6 +15,7 @@ export function ProfileListingRow({
 }) {
   const img = product.product_images?.[0];
   const src = img ? getProductImagePublicUrl(img.storage_path) : null;
+  const meetLine = listingLocationLine(product);
 
   return (
     <li className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4 shadow-sm sm:flex-row sm:items-center">
@@ -46,6 +48,7 @@ export function ProfileListingRow({
         <p className="text-sm font-medium text-foreground">
           {priceLabel ?? formatPrice(Number(product.price))}
         </p>
+        {meetLine ? <p className="text-xs text-muted">{meetLine}</p> : null}
       </div>
       <div className="flex flex-wrap items-center gap-3 sm:justify-end">
         <Link
